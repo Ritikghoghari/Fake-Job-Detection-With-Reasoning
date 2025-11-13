@@ -1,0 +1,14 @@
+streamlit
+pandas
+scikit-learn
+lightgbm
+imbalanced-learn
+shap
+joblib
+python-dotenv
+google-genai
+scipy
+sentence-transformers
+transformers>=4.0.0
+torch       # or install with appropriate CUDA/CPU wheel for your machine
+scipy
