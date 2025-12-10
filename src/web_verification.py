@@ -1,11 +1,18 @@
 # src/web_verification.py
 import os, re, json, requests
+import streamlit as st
 from typing import Dict, Any
 from dotenv import load_dotenv
 
 load_dotenv()
+
 SERPAPI_KEY = os.getenv("SERPAPI_KEY")
+if not SERPAPI_KEY and "SERPAPI_KEY" in st.secrets:
+    SERPAPI_KEY = st.secrets["SERPAPI_KEY"]
+
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY and "OPENAI_API_KEY" in st.secrets:
+    OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
 # Try to import OpenAI client if available, else use placeholder
 try:

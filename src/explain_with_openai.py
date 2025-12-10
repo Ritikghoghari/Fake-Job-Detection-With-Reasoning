@@ -1,8 +1,15 @@
 # src/explain_with_openai.py
 import os, json
+import streamlit as st
 from dotenv import load_dotenv
+
 load_dotenv()
+
+# Try getting key from environment, then secrets
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY and "OPENAI_API_KEY" in st.secrets:
+    OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+
 try:
     from openai import OpenAI
     client = OpenAI(api_key=OPENAI_API_KEY)
