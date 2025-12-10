@@ -36,5 +36,5 @@ pip-delete-this-directory.txt
 *.swo
 
 # Project specific
-model_artifacts/
-data/
+# model_artifacts/
+# data/

@@ -1,0 +1,11 @@
+streamlit
+pandas
+scikit-learn
+joblib
+numpy
+scipy
+shap
+sentence-transformers
+python-dotenv
+requests
+lightgbm
