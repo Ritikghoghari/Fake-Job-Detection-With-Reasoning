@@ -46,90 +46,89 @@ if st.button("Analyze Posting"):
 
         # Result Card
         st.markdown(f"""
-        <div class="custom-card">
-            <div class="{status_class} status-badge">
-                {status_icon} &nbsp; {status_text}
-            </div>
-            <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">
-                {out.get('gemini', {}).get('explanation', 'No detailed explanation provided.')}
-            </p>
-            
-            <div class="metrics-grid">
-                <div class="metric-item">
-                    <div class="metric-value">{out['scores']['scam_prob_model']:.0%}</div>
-                    <div class="metric-label">Scam Prob</div>
-                </div>
-                <div class="metric-item">
-                    <div class="metric-value">{out['scores']['realism_score']:.0%}</div>
-                    <div class="metric-label">Realism Score</div>
-                </div>
-                <div class="metric-item">
-                    <div class="metric-value">{out.get('integrity', {}).get('tamper_score', 0):.0%}</div>
-                    <div class="metric-label">Tamper Score</div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+<div class="custom-card">
+<div class="{status_class} status-badge">{status_icon} &nbsp; {status_text}</div>
+<div class="metrics-grid">
+<div class="metric-item">
+<div class="metric-value">{out['scores']['scam_prob_model']:.0%}</div>
+<div class="metric-label">Scam Prob</div>
+</div>
+<div class="metric-item">
+<div class="metric-value">{out['scores']['realism_score']:.0%}</div>
+<div class="metric-label">Realism Score</div>
+</div>
+<div class="metric-item">
+<div class="metric-value">{out.get('integrity', {}).get('tamper_score', 0):.0%}</div>
+<div class="metric-label">Tamper Score</div>
+</div>
+</div>
+</div>
+""", unsafe_allow_html=True)
 
         # Integrity Details
         integrity = out.get("integrity", {})
         tamper_score = integrity.get("tamper_score", 0.0)
         suspicious = integrity.get("suspicious_spans", [])
         
-        st.markdown(f"""
-        <div class="custom-card">
-            <h3>🔍 Integrity Analysis</h3>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="custom-card"><h3>🔍 Integrity Analysis</h3>""", unsafe_allow_html=True)
         
         if tamper_score > 0.1:
              bar_class = "high" if tamper_score > 0.5 else ""
              st.markdown(f"""
-             <div style="margin-bottom: 15px;">
-                 <small>Tamper / Modification Probability</small>
-                 <div class="tamper-wrapper">
-                     <div class="tamper-fill {bar_class}" style="width: {tamper_score*100}%"></div>
-                 </div>
-             </div>
-             """, unsafe_allow_html=True)
+<div style="margin-bottom: 15px;">
+<small style="color: #cbd5e1;">Tamper / Modification Probability</small>
+<div class="tamper-wrapper">
+<div class="tamper-fill {bar_class}" style="width: {tamper_score*100}%"></div>
+</div>
+</div>
+""", unsafe_allow_html=True)
 
         if suspicious:
-            st.markdown("<strong>Suspicious Spans Detected:</strong>")
+            st.markdown("<strong>Suspicious Spans Detected:</strong>", unsafe_allow_html=True)
             for s in suspicious:
-                st.markdown(f"- <span style='color:#b91c1c'>{s}</span>", unsafe_allow_html=True)
+                st.markdown(f"- <span style='color:#fca5a5'>{s}</span>", unsafe_allow_html=True)
         else:
-            st.markdown("<p style='color:#15803d'>No suspicious text modifications detected.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color:#4ade80'>No suspicious text modifications detected.</p>", unsafe_allow_html=True)
             
         st.markdown("<h4>Suspicious Keywords</h4>", unsafe_allow_html=True)
         if out['fake_keywords']:
             kw_html = "".join([f"<span class='keyword-tag'>{k}</span>" for k in out['fake_keywords']])
             st.markdown(kw_html, unsafe_allow_html=True)
         else:
-            st.markdown("<small>No typical scam keywords found.</small>", unsafe_allow_html=True)
+            st.markdown("<small style='color:#94a3b8'>No typical scam keywords found.</small>", unsafe_allow_html=True)
             
         st.markdown("</div>", unsafe_allow_html=True)
 
     with right:
+        # AI Reasoning Card
+        st.markdown(f"""
+<div class="custom-card">
+<h3>🤖 AI Analysis</h3>
+<p style="color: #e2e8f0; font-size: 0.95rem; line-height: 1.6;">
+{out.get('gemini', {}).get('explanation', 'No detailed explanation provided.')}
+</p>
+</div>
+""", unsafe_allow_html=True)
+
         # Web Verification Card
         web = out.get('web_verification', {})
         web_verdict = web.get('web_verdict', 'unknown').upper()
-        verdict_color = "#15803d" if "REAL" in web_verdict or "LIKELY_REAL" in web_verdict else "#b91c1c"
+        verdict_color = "#4ade80" if "REAL" in web_verdict or "LIKELY_REAL" in web_verdict else "#f87171"
         
         st.markdown(f"""
-        <div class="custom-card">
-            <h3>🌐 Web Verification</h3>
-            <div style="margin-bottom: 15px;">
-                <div style="color: #64748b; font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Company Detected</div>
-                <div style="font-size: 1.1rem; font-weight: 600; color: #0f172a;">{web.get('company_detected','Unknown')}</div>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                 <div style="color: #64748b; font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Web Cross-Check Verdict</div>
-                 <div style="color: {verdict_color}; font-weight: 700;">{web_verdict.replace('_', ' ')}</div>
-            </div>
-            
-            <p style="font-size: 0.9rem; color: #334155;">{web.get('reasoning', 'No reasoning available.')}</p>
-        </div>
-        """, unsafe_allow_html=True)
+<div class="custom-card">
+<h3>🌐 Web Verification</h3>
+<div style="margin-bottom: 15px;">
+<div style="color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Company Detected</div>
+<div style="font-size: 1.1rem; font-weight: 600; color: #f8fafc;">{web.get('company_detected','Unknown')}</div>
+</div>
+<div style="margin-bottom: 15px;">
+<div style="color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Web Cross-Check Verdict</div>
+<div style="color: {verdict_color}; font-weight: 700;">{web_verdict.replace('_', ' ')}</div>
+</div>
+<p style="font-size: 0.9rem; color: #cbd5e1;">{web.get('reasoning', 'No reasoning available.')}</p>
+</div>
+""", unsafe_allow_html=True)
 
         # Email Analysis Card
         emails = out.get('emails_checked') or []
@@ -148,14 +147,14 @@ if st.button("Analyze Posting"):
                 elif status == "invalid": icon = "❌"
                 
                 st.markdown(f"""
-                <div style="background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
-                    <div style="font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
-                        {icon} {addr}
-                    </div>
-                    <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">{expl}</div>
-                </div>
-                """, unsafe_allow_html=True)
+<div style="background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #334155;">
+<div style="font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; color: #f8fafc;">
+{icon} {addr}
+</div>
+<div style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px;">{expl}</div>
+</div>
+""", unsafe_allow_html=True)
         else:
-            st.markdown("<p style='color:#64748b'>No email addresses found in text.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color:#94a3b8'>No email addresses found in text.</p>", unsafe_allow_html=True)
             
         st.markdown("</div>", unsafe_allow_html=True)
