@@ -1,102 +1,161 @@
-# src/app.py
 import streamlit as st
 from predict_utils import predict_single
+from styles import get_custom_css
 
-st.set_page_config(page_title="Fake Job Detector — Safe + Tamper", layout="wide")
-st.markdown("""
-<style>
-body, .stApp { background-color: #f6f8fa; color: #0f172a; font-family: Inter, sans-serif; }
-.result-box, .reasoning-box { background:#fff; border-radius:12px; padding:18px; box-shadow: 0 6px 18px rgba(2,6,23,0.06); }
-.keyword { background:#fff7cc; border-radius:6px; padding:4px 8px; margin-right:6px; display:inline-block; margin-bottom:6px;}
-.tamper { background:#fff1f2; border-left:4px solid #ef4444; padding:8px; border-radius:6px; margin-bottom:8px; }
-</style>
-""", unsafe_allow_html=True)
+st.set_page_config(page_title="Fake Job Detector", layout="wide", page_icon="🛡️")
+st.markdown(get_custom_css(), unsafe_allow_html=True)
 
-st.title("🕵️‍♂️ Fake Job Detector — Safe + Tamper Detection")
-st.caption("OpenAI + ML + Email + Web + Hybrid Tamper Detection (Safe Mode)")
+st.title("🛡️ Job Integrity Verifier")
+st.markdown("##### Advanced AI-powered detection for fake, scam, and modified job postings.")
 
-job_text = st.text_area("Paste job description here", height=380, placeholder="Paste full job posting...")
+job_text = st.text_area("Paste job description here", height=200, placeholder="Paste the full job posting content here to analyze integrity and authenticity...")
 
-if st.button("Analyze"):
+if st.button("Analyze Posting"):
     if not job_text.strip():
-        st.warning("Paste a job description first.")
+        st.warning("Please paste a job description first.")
         st.stop()
 
-    with st.spinner("Analyzing..."):
+    with st.spinner("Running deep analysis (ML + Web + Email Checks)..."):
         out = predict_single({"description": job_text})
 
-    left, right = st.columns([1.6, 1])
+    left, right = st.columns([1.5, 1])
 
     with left:
-        st.markdown("<div class='result-box'>", unsafe_allow_html=True)
-        st.header(f"Result: {out['final_label']}")
-        if out['final_label'] == "REAL":
-            st.success("This posting appears REAL (Safe Mode).")
-        elif out['final_label'] == "FAKE_SCAM":
-            st.error("This posting appears FAKE / SCAM.")
-        elif out['final_label'] == "FAKE_MODIFIED":
-            st.error("This posting appears to be a REAL posting that has been MODIFIED (possible tampering).")
-        elif out['final_label'] == "AUTO_GENERATED":
-            st.warning("This posting looks AI-generated / templated.")
-        elif out['final_label'] == "FICTIONAL":
-            st.info("This posting appears fictional.")
-        st.write("")
-        st.subheader("Key Scores")
-        sc = out['scores']
-        st.write(f"- **ML Scam Probability:** {sc['scam_prob_model']:.2f}")
-        st.write(f"- **OpenAI Realism Score:** {sc['realism_score']:.2f}")
-        if sc.get('anomaly_score') is not None:
-            st.write(f"- **Anomaly Score:** {sc['anomaly_score']:.2f}")
+        # Determine status styling
+        label = out['final_label']
+        if label == "REAL":
+            status_class = "status-real"
+            status_icon = "✅"
+            status_text = "LIKELY REAL"
+        elif label == "FAKE_SCAM":
+            status_class = "status-fake"
+            status_icon = "🚨"
+            status_text = "SCAM DETECTED"
+        elif label == "FAKE_MODIFIED":
+            status_class = "status-suspicious"
+            status_icon = "⚠️"
+            status_text = "MODIFIED / TAMPERED"
+        elif label == "AUTO_GENERATED":
+            status_class = "status-info"
+            status_icon = "🤖"
+            status_text = "AI GENERATED"
+        else:
+            status_class = "status-info"
+            status_icon = "ℹ️"
+            status_text = label
 
-        st.subheader("Tamper / Integrity")
+        # Result Card
+        st.markdown(f"""
+        <div class="custom-card">
+            <div class="{status_class} status-badge">
+                {status_icon} &nbsp; {status_text}
+            </div>
+            <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">
+                {out.get('gemini', {}).get('explanation', 'No detailed explanation provided.')}
+            </p>
+            
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-value">{out['scores']['scam_prob_model']:.0%}</div>
+                    <div class="metric-label">Scam Prob</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">{out['scores']['realism_score']:.0%}</div>
+                    <div class="metric-label">Realism Score</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">{out.get('integrity', {}).get('tamper_score', 0):.0%}</div>
+                    <div class="metric-label">Tamper Score</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Integrity Details
         integrity = out.get("integrity", {})
         tamper_score = integrity.get("tamper_score", 0.0)
-        st.progress(tamper_score)
-        st.write(f"Tamper Score: **{tamper_score:.2f}**")
-        if tamper_score >= 0.65:
-            st.markdown("<div class='tamper'>⚠️ High tamper score — posting contains suspicious modifications or injected content.</div>", unsafe_allow_html=True)
-
         suspicious = integrity.get("suspicious_spans", [])
+        
+        st.markdown(f"""
+        <div class="custom-card">
+            <h3>🔍 Integrity Analysis</h3>
+        """, unsafe_allow_html=True)
+        
+        if tamper_score > 0.1:
+             bar_class = "high" if tamper_score > 0.5 else ""
+             st.markdown(f"""
+             <div style="margin-bottom: 15px;">
+                 <small>Tamper / Modification Probability</small>
+                 <div class="tamper-wrapper">
+                     <div class="tamper-fill {bar_class}" style="width: {tamper_score*100}%"></div>
+                 </div>
+             </div>
+             """, unsafe_allow_html=True)
+
         if suspicious:
-            st.markdown("### Suspicious spans / indicators")
+            st.markdown("<strong>Suspicious Spans Detected:</strong>")
             for s in suspicious:
-                st.write(f"- {s}")
-
-        st.subheader("Suspicious Keywords")
-        if out['fake_keywords']:
-            for k in out['fake_keywords']:
-                st.markdown(f"<span class='keyword'>{k}</span>", unsafe_allow_html=True)
+                st.markdown(f"- <span style='color:#b91c1c'>{s}</span>", unsafe_allow_html=True)
         else:
-            st.write("None found.")
-
+            st.markdown("<p style='color:#15803d'>No suspicious text modifications detected.</p>", unsafe_allow_html=True)
+            
+        st.markdown("<h4>Suspicious Keywords</h4>", unsafe_allow_html=True)
+        if out['fake_keywords']:
+            kw_html = "".join([f"<span class='keyword-tag'>{k}</span>" for k in out['fake_keywords']])
+            st.markdown(kw_html, unsafe_allow_html=True)
+        else:
+            st.markdown("<small>No typical scam keywords found.</small>", unsafe_allow_html=True)
+            
         st.markdown("</div>", unsafe_allow_html=True)
 
     with right:
-        st.markdown("<div class='reasoning-box'>", unsafe_allow_html=True)
-        st.subheader("AI Reasoning (Doc-level)")
-        st.write(out.get('gemini', {}).get('explanation', 'No explanation provided.'))
-
-        st.subheader("Web Verification")
+        # Web Verification Card
         web = out.get('web_verification', {})
-        st.write(f"- Company detected: **{web.get('company_detected','Unknown')}**")
-        st.write(f"- Verdict: **{web.get('web_verdict')}** (conf {web.get('confidence',0):.2f})")
-        st.write("Reason: " + web.get('reasoning', 'No reasoning available.'))
+        web_verdict = web.get('web_verdict', 'unknown').upper()
+        verdict_color = "#15803d" if "REAL" in web_verdict or "LIKELY_REAL" in web_verdict else "#b91c1c"
+        
+        st.markdown(f"""
+        <div class="custom-card">
+            <h3>🌐 Web Verification</h3>
+            <div style="margin-bottom: 15px;">
+                <div style="color: #64748b; font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Company Detected</div>
+                <div style="font-size: 1.1rem; font-weight: 600; color: #0f172a;">{web.get('company_detected','Unknown')}</div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                 <div style="color: #64748b; font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Web Cross-Check Verdict</div>
+                 <div style="color: {verdict_color}; font-weight: 700;">{web_verdict.replace('_', ' ')}</div>
+            </div>
+            
+            <p style="font-size: 0.9rem; color: #334155;">{web.get('reasoning', 'No reasoning available.')}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        st.subheader("Email checks")
+        # Email Analysis Card
         emails = out.get('emails_checked') or []
+        
+        st.markdown("""<div class="custom-card"><h3>📧 Email Verification</h3>""", unsafe_allow_html=True)
+        
         if emails:
             for e in emails:
-                addr = e.get('email')
-                status = e.get('status')
+                addr = e.get('email', 'Unknown')
+                status = e.get('status', 'unknown')
                 expl = e.get('explanation') or e.get('openai', {}).get('explanation', '')
-                if status == "valid":
-                    st.success(f"✅ {addr} → {expl}")
-                elif status == "suspicious":
-                    st.warning(f"⚠ {addr} → {expl}")
-                elif status == "invalid":
-                    st.error(f"❌ {addr} → {expl}")
-                else:
-                    st.info(f"{addr} → {expl}")
+                
+                icon = "❓"
+                if status == "valid": icon = "✅"
+                elif status == "suspicious": icon = "⚠️"
+                elif status == "invalid": icon = "❌"
+                
+                st.markdown(f"""
+                <div style="background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                        {icon} {addr}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">{expl}</div>
+                </div>
+                """, unsafe_allow_html=True)
         else:
-            st.info("No emails detected.")
+            st.markdown("<p style='color:#64748b'>No email addresses found in text.</p>", unsafe_allow_html=True)
+            
         st.markdown("</div>", unsafe_allow_html=True)
