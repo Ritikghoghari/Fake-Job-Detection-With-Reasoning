@@ -101,19 +101,29 @@ def predict_single(job_dict: dict):
     if web_verdict in ("real", "likely_real") and web_conf >= 0.55:
         final_label = "REAL"
 
-    # 2) If web says likely_fake/fake -> require corroboration (>=2 supports)
+    # 2) If web says likely_fake/fake -> Trust it more (updated logic)
     if web_verdict in ("likely_fake", "fake"):
-        supports = 0
-        if email_invalid:
-            supports += 1
-        if scam_prob_model > 0.80:
-            supports += 1
-        if len(fake_keywords) >= 3:
-            supports += 1
-        if supports >= 2:
+        # High confidence web result is enough on its own
+        if web_conf >= 0.70:
             final_label = "FAKE_SCAM"
         else:
-            final_label = "REAL"
+            # Moderate confidence: require 1 corroboration (was 2)
+            supports = 0
+            if email_invalid:
+                supports += 1
+            if scam_prob_model > 0.70: # lowered from 0.80
+                supports += 1
+            if len(fake_keywords) >= 1: # lowered from 3
+                supports += 1
+            
+            if supports >= 1:
+                final_label = "FAKE_SCAM"
+            else:
+                # If explicitly "fake" (stronger than likely), lean to caution
+                if web_verdict == "fake":
+                    final_label = "FAKE_SCAM"
+                else:
+                    final_label = "REAL"
 
     # 3) Tamper override for recognized brands: if tamper_score high -> FAKE_MODIFIED
     safe_brands = {"mercedes", "mercedes-benz", "bmw", "google", "amazon", "siemens", "bosch", "meta", "microsoft", "apple", "dhl", "picnic"}
