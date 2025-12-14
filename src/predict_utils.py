@@ -14,8 +14,8 @@ from web_verification import verify_job_online_safe
 from email_check_openai import enhanced_email_check
 from integrity_check import assess_tamper
 
-PATH_TFIDF = "../model_artifacts/lightgbm_pipeline.joblib"
-PATH_ISO = "../model_artifacts/iso_forest.joblib"
+PATH_TFIDF = os.path.join(os.path.dirname(__file__), "../model_artifacts/lightgbm_pipeline.joblib")
+PATH_ISO = os.path.join(os.path.dirname(__file__), "../model_artifacts/iso_forest.joblib")
 
 _embedder = SentenceTransformer("all-MiniLM-L6-v2")
 
