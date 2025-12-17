@@ -4,6 +4,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=Streamlit&logoColor=white)](https://streamlit.io)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-412991?style=flat&logo=openai&logoColor=white)](https://openai.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Live Demo](https://img.shields.io/badge/Demo-Click%20Here-green?style=flat&logo=streamlit)](https://fake-job-detection.streamlit.app/)
 
 ## 🚀 Overview
 **Fake Job Detection** is an advanced AI-powered system designed to analyze job postings and determine their authenticity. By combining traditional Machine Learning (LightGBM) with modern Large Language Models (GPT-4o), web verification, and integrity checks, this tool provides a robust defense against job scams, phishing attempts, and modified/tampered job listings.
