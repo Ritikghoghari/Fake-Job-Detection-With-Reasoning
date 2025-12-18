@@ -133,8 +133,12 @@ def predict_single(job_dict: dict):
 
     # 4) Auto-generated detection (Updated: flag high-quality AI text even if realism is high)
     # If text is highly generic/AI-written (high perplexity score + high boilerplate), flag it.
+    # FIX: Don't flag as AI if we have strong web verification and high realism (corporate speak often looks like AI)
     if gen_score > 0.85 and gen_info.get("boilerplate_score", 0) > 0.8:
-        final_label = "AUTO_GENERATED"
+        # If verified as likely real and realism is high, assume it's just formal/template text
+        is_web_real = (web_verdict in ("real", "likely_real"))
+        if not (is_web_real and realism_score > 0.80):
+            final_label = "AUTO_GENERATED"
 
     # 5) Final protective strong-flag rule (require multiple strong signals)
     strong_flags = 0
