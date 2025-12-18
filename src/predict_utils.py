@@ -131,8 +131,9 @@ def predict_single(job_dict: dict):
     if brand_detected and tamper_score >= 0.65:
         final_label = "FAKE_MODIFIED"
 
-    # 4) Auto-generated detection (only if realism low)
-    if gen_score > 0.9 and realism_score < 0.4:
+    # 4) Auto-generated detection (Updated: flag high-quality AI text even if realism is high)
+    # If text is highly generic/AI-written (high perplexity score + high boilerplate), flag it.
+    if gen_score > 0.85 and gen_info.get("boilerplate_score", 0) > 0.8:
         final_label = "AUTO_GENERATED"
 
     # 5) Final protective strong-flag rule (require multiple strong signals)
